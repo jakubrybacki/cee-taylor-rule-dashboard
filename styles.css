@@ -1,0 +1,649 @@
+/* ==========================================================================
+   CEE Taylor Rule Research Dashboard - Looker Studio Theme & Responsive Rules
+   Standards compliant with .agents/skills/dashboard-standards/SKILL.md
+   ========================================================================== */
+
+:root {
+  --col-pink: #d6498b;
+  --col-pink-area: rgba(214, 73, 139, 0.18);
+  --col-yellow: #fec44f;
+  --col-yellow-area: rgba(254, 196, 79, 0.22);
+  --col-orange: #fe9929;
+  --col-orange-area: rgba(254, 153, 41, 0.18);
+  --col-seledyn: #41b6c4;
+  --col-seledyn-area: rgba(65, 182, 196, 0.18);
+  --col-line: #111111;
+  --bg-page: #f8f9fa;
+  --bg-card: #ffffff;
+  --border-card: #dcdfe6;
+  --border-dt-header: #d49b00;
+  --text-primary: #111111;
+  --text-muted: #555555;
+  --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  background-color: var(--bg-page) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-family-sans) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --------------------------------------------------------------------------
+   Navbar & Navigation Tabs
+   -------------------------------------------------------------------------- */
+.navbar {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid var(--border-card) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.navbar-brand {
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  font-size: 1.15rem !important;
+  letter-spacing: -0.2px;
+}
+
+.navbar-nav .nav-link {
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  color: #4b5563 !important;
+  padding: 8px 16px !important;
+  border-radius: 6px;
+  transition: all 0.15s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover {
+  color: var(--text-primary) !important;
+  background-color: #f3f4f6;
+}
+
+.navbar-nav .nav-link.active {
+  color: var(--text-primary) !important;
+  background-color: var(--col-yellow) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Cards & Layout Components - Full Natural Height & Responsive Scrolling
+   -------------------------------------------------------------------------- */
+.dashboard-page,
+.tab-pane,
+.tab-content {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.bslib-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  height: auto !important;
+  min-height: fit-content !important;
+  grid-template-rows: none !important;
+  grid-template-columns: none !important;
+  gap: 20px !important;
+}
+
+.bslib-grid > .card,
+.quarto-dashboard-row > .card,
+.card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-card) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  margin-bottom: 24px !important;
+  overflow: visible !important;
+  height: auto !important;
+  min-height: fit-content !important;
+  width: 100% !important;
+  flex: 0 0 auto !important;
+}
+
+.card-body {
+  height: auto !important;
+  min-height: fit-content !important;
+  overflow: visible !important;
+  padding: 0 !important;
+}
+
+.html-widget.plotly,
+.js-plotly-plot {
+  width: 100% !important;
+  min-height: 480px !important;
+}
+
+.card-header {
+  position: relative;
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #edf0f5 !important;
+  padding: 16px 24px !important;
+  display: block !important;
+  width: 100% !important;
+}
+
+.chart-title {
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  margin: 0 !important;
+  line-height: 1.35 !important;
+  width: 100% !important;
+  display: block !important;
+}
+
+.chart-subtitle {
+  font-size: 0.82rem !important;
+  font-weight: 400 !important;
+  color: var(--text-muted) !important;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.chart-subtitle mjx-container {
+  font-size: 1.05em !important;
+  margin: 0 2px !important;
+  vertical-align: -0.12em !important;
+}
+
+/* --------------------------------------------------------------------------
+   Chart Bottom Export Toolbar & CSV Download Button
+   -------------------------------------------------------------------------- */
+.chart-export-toolbar {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  width: 100% !important;
+  text-align: right !important;
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  padding: 10px 18px 14px 18px !important;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
+  box-sizing: border-box !important;
+}
+
+.chart-export-toolbar .btn-export-chart-csv,
+.btn-export-chart-csv {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  color: #374151 !important;
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.15s ease-in-out !important;
+  line-height: 1 !important;
+  text-decoration: none !important;
+}
+
+.btn-export-chart-csv:hover {
+  background: #f9fafb !important;
+  color: #111827 !important;
+  border-color: #9ca3af !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+.btn-export-chart-csv:active {
+  background: #f3f4f6 !important;
+  transform: translateY(1px);
+}
+
+.btn-export-chart-csv svg {
+  width: 13px !important;
+  height: 13px !important;
+  flex-shrink: 0 !important;
+  stroke: currentColor !important;
+}
+
+.btn-export-chart-csv span {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* --------------------------------------------------------------------------
+   DT DataTables Looker Studio Amber Header & Styling
+   -------------------------------------------------------------------------- */
+table.dataTable {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  width: 100% !important;
+  margin-top: 8px !important;
+}
+
+table.dataTable thead th {
+  background-color: var(--col-yellow) !important;
+  color: #111111 !important;
+  font-weight: 700 !important;
+  border-bottom: 2px solid var(--border-dt-header) !important;
+  font-size: 14px !important;
+  padding: 13px 16px !important;
+  vertical-align: middle !important;
+}
+
+table.dataTable tbody td {
+  font-size: 14px !important;
+  vertical-align: middle !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding: 14px 16px !important;
+  line-height: 1.4 !important;
+}
+
+table.dataTable.hover tbody tr:hover,
+table.dataTable tbody tr:hover {
+  background-color: #fff9e6 !important;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  margin-left: 6px !important;
+  outline: none !important;
+}
+
+.dataTables_wrapper .dataTables_length select {
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+}
+
+.dataTables_wrapper .dt-buttons {
+  float: right !important;
+  text-align: right !important;
+  margin-bottom: 8px !important;
+}
+
+.dt-buttons .dt-button {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+  padding: 5px 12px !important;
+  margin-left: 6px !important;
+  margin-right: 0 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Taylor Rule Subtitle Mathematical Callout Box
+   -------------------------------------------------------------------------- */
+.taylor-subtitle-box {
+  display: block !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin-top: 12px !important;
+  margin-bottom: 6px !important;
+  padding: 14px 20px !important;
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-left: 4px solid var(--col-yellow) !important;
+  border-radius: 6px !important;
+}
+
+.math-rule-row {
+  display: flex !important;
+  align-items: baseline !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin-bottom: 8px !important;
+}
+
+.math-rule-row:last-child {
+  margin-bottom: 0 !important;
+}
+
+.math-rule-label {
+  font-weight: 700 !important;
+  font-size: 0.88rem !important;
+  color: #0f172a !important;
+  min-width: 210px !important;
+}
+
+.math-formula {
+  font-size: 0.95rem !important;
+  color: #1e293b !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.math-formula mjx-container {
+  margin: 0 !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+.math-rule-note {
+  font-size: 0.78rem !important;
+  color: #64748b !important;
+  font-style: italic !important;
+}
+
+/* --------------------------------------------------------------------------
+   Interactive Natural Rate (r*) Slider Box
+   -------------------------------------------------------------------------- */
+.rstar-control-box {
+  background: #ffffff !important;
+  border: 1px solid var(--border-card) !important;
+  border-left: 5px solid var(--col-pink) !important;
+  border-radius: 8px !important;
+  padding: 20px 24px !important;
+  margin-bottom: 24px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+}
+
+.rstar-label {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  margin-bottom: 4px !important;
+}
+
+.badge-rstar {
+  background-color: var(--col-pink) !important;
+  color: #ffffff !important;
+  padding: 4px 10px !important;
+  border-radius: 5px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  margin-left: 8px !important;
+  display: inline-block !important;
+}
+
+.rstar-sub {
+  font-size: 13px !important;
+  color: var(--text-muted) !important;
+  display: block !important;
+  margin-top: 2px !important;
+}
+
+.custom-rstar-slider {
+  width: 220px !important;
+  height: 6px !important;
+  cursor: pointer !important;
+  accent-color: var(--col-pink) !important;
+}
+
+.slider-boundary {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #4b5563 !important;
+}
+
+.btn-rstar-reset {
+  padding: 5px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border: 1px solid #d1d5db !important;
+  background: #ffffff !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  color: #374151 !important;
+}
+
+.btn-rstar-reset:hover {
+  background: #f3f4f6 !important;
+  color: #111111 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Interactive Policy Simulation Sliders & Presets
+   -------------------------------------------------------------------------- */
+.policy-sim-container {
+  background: #fcfcfd;
+  border-radius: 8px;
+  padding-top: 6px;
+}
+
+.sim-panel-box {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 16px 20px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+}
+
+.sim-panel-title {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  margin-bottom: 12px !important;
+  display: block !important;
+}
+
+.country-btn-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 10px !important;
+}
+
+.btn-sim-country {
+  padding: 10px 14px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border: 1.5px solid #d1d5db !important;
+  background: #ffffff !important;
+  border-radius: 8px !important;
+  color: #374151 !important;
+  cursor: pointer !important;
+  text-align: center !important;
+  transition: all 0.15s ease-in-out !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  height: 42px !important;
+}
+
+.btn-sim-country:hover {
+  background: #f3f4f6 !important;
+  border-color: #9ca3af !important;
+  color: #111827 !important;
+}
+
+.btn-sim-country.active {
+  background: var(--col-yellow) !important;
+  border-color: #d49b00 !important;
+  color: #111827 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+.preset-btn-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  grid-template-rows: repeat(3, auto) !important;
+  gap: 10px !important;
+}
+
+.btn-preset {
+  padding: 10px 14px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #f8fafc !important;
+  border-radius: 8px !important;
+  color: #1e293b !important;
+  cursor: pointer !important;
+  text-align: center !important;
+  transition: all 0.15s ease-in-out !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 42px !important;
+  white-space: nowrap !important;
+}
+
+.btn-preset:hover {
+  background: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+.slider-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 14px 18px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+
+.param-slider-label {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  margin-bottom: 8px !important;
+  display: block !important;
+}
+
+.badge-param {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  padding: 3px 9px !important;
+  border-radius: 5px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  margin-left: 6px !important;
+  display: inline-block !important;
+}
+
+.custom-param-slider {
+  cursor: pointer !important;
+  accent-color: #0284c7 !important;
+  height: 6px !important;
+}
+
+/* --------------------------------------------------------------------------
+   Desktop Tab Isolation (CRITICAL RULE from Section 6.4)
+   -------------------------------------------------------------------------- */
+@media (min-width: 769px) {
+  #historical-rates.active {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Synchronized Country Selector Bar (Looker Studio Theme)
+   -------------------------------------------------------------------------- */
+.country-sync-card {
+  background: #ffffff !important;
+  border: 1px solid var(--border-card) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  padding: 12px 18px !important;
+  margin-bottom: 14px !important;
+}
+
+.country-pill-container {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 10px !important;
+  overflow-x: auto;
+}
+
+.btn-country-pill {
+  border: 1.5px solid #d1d5db !important;
+  background-color: #ffffff !important;
+  color: #374151 !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  padding: 7px 16px !important;
+  border-radius: 20px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease-in-out !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  user-select: none;
+}
+
+.btn-country-pill:hover {
+  background-color: #f3f4f6 !important;
+  border-color: #9ca3af !important;
+  color: #111111 !important;
+}
+
+.btn-country-pill.active {
+  background-color: #111111 !important;
+  border-color: #111111 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Mobile Continuous Scroll Pattern (CRITICAL UX STANDARD from Section 6.1)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  /* Show all tab panes in continuous vertical flow on mobile */
+  .tab-content > .dashboard-page.tab-pane {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    margin-bottom: 2.5rem !important;
+    border-bottom: 2px solid #dee2e6 !important;
+    padding-bottom: 2rem !important;
+  }
+
+  /* Section Header Badges via CSS Pseudo-elements */
+  #taylor-rule::before { content: "🎯 Taylor Rule Monitor & Projections"; }
+  #historical-rates::before { content: "📈 Historical Rates (2010-2026)"; }
+
+  .dashboard-page::before {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111111;
+    background: #e9ecef;
+    padding: 8px 14px;
+    border-radius: 6px;
+    margin: 1.5rem 0 1rem 0;
+    border-left: 4px solid var(--col-yellow);
+  }
+
+  .bslib-grid, .quarto-dashboard-row {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .card {
+    min-height: 480px !important;
+    margin-bottom: 16px !important;
+    width: 100% !important;
+  }
+
+  .chart-title {
+    font-size: 15px !important;
+  }
+
+  .chart-subtitle {
+    font-size: 12px !important;
+  }
+
+  /* Prevent iOS Safari auto-zoom on input focus */
+  select, input {
+    font-size: 16px !important;
+  }
+}

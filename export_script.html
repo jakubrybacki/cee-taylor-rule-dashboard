@@ -1,0 +1,472 @@
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true
+  },
+  options: {
+    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  }
+};
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<script>
+/**
+ * CEE Taylor Rule Dashboard - Client-side Utilities
+ * 1. Client-side RFC-4180 CSV Exporter with UTF-8 BOM for Excel
+ * 2. Mobile Continuous Scroll & Smooth Anchor Navigation
+ * 3. Interactive Natural Rate (r*) Slider Engine
+ */
+
+// 1. Client-side CSV Exporter
+function exportCardCsv(btnEl) {
+  try {
+    const cardEl = btnEl.closest('.card') || btnEl.closest('.dashboard-page') || document.body;
+    let cardTitle = 'taylor_rule_data';
+    const titleEl = cardEl.querySelector('.chart-title');
+    if (titleEl) {
+      const clone = titleEl.cloneNode(true);
+      const sub = clone.querySelector('.chart-subtitle');
+      if (sub) sub.remove();
+      cardTitle = clone.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    }
+
+    const plotlyEl = cardEl.querySelector('.js-plotly-plot') || cardEl.querySelector('.plotly');
+    if (plotlyEl && plotlyEl.data && plotlyEl.data.length > 0) {
+      exportPlotlyDataToCsv(plotlyEl, cardTitle);
+      return;
+    }
+
+    const dtEl = cardEl.querySelector('table.dataTable') || cardEl.querySelector('table');
+    if (dtEl) {
+      exportTableToCsv(dtEl, cardTitle);
+      return;
+    }
+
+    alert('No downloadable dataset found in this card.');
+  } catch (err) {
+    console.error('Export CSV error:', err);
+    alert('Could not export CSV: ' + err.message);
+  }
+}
+
+function exportPlotlyDataToCsv(plotlyEl, filename) {
+  const traces = plotlyEl.data;
+  const xMap = new Map();
+
+  traces.forEach((trace, traceIdx) => {
+    const traceName = trace.name || `Series_${traceIdx + 1}`;
+    if (trace.x && trace.y) {
+      for (let i = 0; i < trace.x.length; i++) {
+        const xVal = trace.x[i];
+        const yVal = trace.y[i] !== undefined && trace.y[i] !== null ? trace.y[i] : '';
+        if (!xMap.has(xVal)) {
+          xMap.set(xVal, {});
+        }
+        xMap.get(xVal)[traceName] = yVal;
+      }
+    }
+  });
+
+  const traceNames = traces.map((t, idx) => t.name || `Series_${idx + 1}`);
+  const uniqueNames = [...new Set(traceNames)];
+  const headers = ['Date_or_Category', ...uniqueNames];
+  const rows = [headers.map(escapeCsvCell).join(',')];
+  const sortedKeys = Array.from(xMap.keys()).sort();
+
+  for (const xVal of sortedKeys) {
+    const rowObj = xMap.get(xVal);
+    const row = [escapeCsvCell(xVal)];
+    for (const name of uniqueNames) {
+      const val = rowObj[name] !== undefined ? rowObj[name] : '';
+      row.push(escapeCsvCell(val));
+    }
+    rows.push(row.join(','));
+  }
+
+  const csvContent = rows.join('\r\n');
+  triggerCsvDownload(csvContent, filename);
+}
+
+function exportTableToCsv(tableEl, filename) {
+  const rows = [];
+  const headerCells = tableEl.querySelectorAll('thead th');
+  if (headerCells.length > 0) {
+    const hRow = [];
+    headerCells.forEach(th => hRow.push(escapeCsvCell(th.innerText.trim())));
+    rows.push(hRow.join(','));
+  }
+
+  const bodyRows = tableEl.querySelectorAll('tbody tr');
+  bodyRows.forEach(tr => {
+    const bRow = [];
+    tr.querySelectorAll('td').forEach(td => bRow.push(escapeCsvCell(td.innerText.trim())));
+    if (bRow.length > 0) {
+      rows.push(bRow.join(','));
+    }
+  });
+
+  const csvContent = rows.join('\r\n');
+  triggerCsvDownload(csvContent, filename);
+}
+
+function escapeCsvCell(cell) {
+  if (cell === null || cell === undefined) return '""';
+  const str = String(cell).replace(/"/g, '""');
+  return `"${str}"`;
+}
+
+function triggerCsvDownload(csvString, filename) {
+  const blob = new Blob(['\ufeff' + csvString], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${filename}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+// 2. Mobile Continuous Scroll & Smooth Anchor Navigation
+document.addEventListener('DOMContentLoaded', function() {
+  const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+  navLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      if (window.innerWidth <= 768) {
+        const targetSelector = this.getAttribute('data-bs-target') || this.getAttribute('href');
+        if (targetSelector && targetSelector.startsWith('#')) {
+          e.preventDefault();
+
+          document.querySelectorAll('.navbar-nav .nav-link').forEach(l => {
+            l.classList.remove('active');
+            l.setAttribute('aria-selected', 'false');
+          });
+          this.classList.add('active');
+          this.setAttribute('aria-selected', 'true');
+
+          const targetEl = document.querySelector(targetSelector);
+          if (targetEl) {
+            const navCollapse = document.getElementById('dashboard-collapse');
+            if (navCollapse && navCollapse.classList.contains('show')) {
+              navCollapse.classList.remove('show');
+              const toggler = document.querySelector('.navbar-toggler');
+              if (toggler) {
+                toggler.setAttribute('aria-expanded', 'false');
+                toggler.classList.add('collapsed');
+              }
+            }
+
+            setTimeout(function() {
+              const navEl = document.querySelector('.navbar');
+              const navHeight = navEl ? navEl.offsetHeight : 56;
+              const targetPos = targetEl.getBoundingClientRect().top + window.pageYOffset - navHeight - 12;
+
+              window.scrollTo({
+                top: Math.max(0, targetPos),
+                behavior: 'smooth'
+              });
+            }, 60);
+          }
+        }
+      }
+    });
+  });
+});
+
+// 3. Interactive Natural Rate r* Slider Engine (Exclusively modifies Column 3: Taylor 1993)
+function updateRStar(val) {
+  const rStar = parseFloat(val);
+  const badge = document.getElementById('rstar-val');
+  if (badge) badge.textContent = rStar.toFixed(2) + '%';
+
+  const rows = document.querySelectorAll('.rstar-country-row');
+  rows.forEach(row => {
+    const inf = parseFloat(row.getAttribute('data-inf'));
+    const target = parseFloat(row.getAttribute('data-target'));
+    const gap = parseFloat(row.getAttribute('data-gap'));
+
+    // Taylor (1993) canonical benchmark: r* + target + 1.5 * (inf - target) + 0.5 * gap
+    const iTaylor = rStar + target + 1.5 * (inf - target) + 0.5 * gap;
+
+    // Modifies exclusively Column 3 (Taylor 1993)
+    const targetEl = row.querySelector('.cell-target');
+    if (targetEl) targetEl.textContent = iTaylor.toFixed(2) + '%';
+  });
+
+  // Dynamically update Plotly charts on the page
+  updatePlotlyRStar(rStar);
+}
+
+function resetRStar(val) {
+  const slider = document.getElementById('rstar-slider');
+  if (slider) {
+    slider.value = val;
+    updateRStar(val);
+  }
+}
+
+// --------------------------------------------------------------------------
+// 3b. Interactive Country Policy Sliders & Counterfactual Simulator Engine
+// --------------------------------------------------------------------------
+const DEFAULT_COUNTRY_PARAMS = {
+  'PL': { phi_pi: 1.1826, phi_x: 0.6234, rho: 0.9470 },
+  'CZ': { phi_pi: 1.6538, phi_x: 0.8611, rho: 0.9617 },
+  'HU': { phi_pi: 1.0542, phi_x: 0.3605, rho: 0.9469 },
+  'RO': { phi_pi: 1.1654, phi_x: 0.4614, rho: 0.7905 }
+};
+
+window.simCurrentCountry = 'PL';
+window.simActiveParams = JSON.parse(JSON.stringify(DEFAULT_COUNTRY_PARAMS));
+
+function selectSimCountry(countryCode) {
+  window.simCurrentCountry = countryCode;
+
+  // Update country pill button states in sim control box
+  document.querySelectorAll('.btn-sim-country').forEach(btn => {
+    if (btn.getAttribute('data-country') === countryCode) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  // Sync sliders to current parameters of selected country
+  syncSlidersToCountry(countryCode);
+}
+
+function syncSlidersToCountry(countryCode) {
+  const p = window.simActiveParams[countryCode] || DEFAULT_COUNTRY_PARAMS[countryCode];
+  const sPhiPi = document.getElementById('sim-phi-pi');
+  const sPhiX = document.getElementById('sim-phi-x');
+  const sRho = document.getElementById('sim-rho');
+
+  if (sPhiPi) {
+    sPhiPi.value = p.phi_pi.toFixed(2);
+    document.getElementById('sim-phi-pi-val').textContent = parseFloat(sPhiPi.value).toFixed(2);
+  }
+  if (sPhiX) {
+    sPhiX.value = p.phi_x.toFixed(2);
+    document.getElementById('sim-phi-x-val').textContent = parseFloat(sPhiX.value).toFixed(2);
+  }
+  if (sRho) {
+    sRho.value = p.rho.toFixed(2);
+    document.getElementById('sim-rho-val').textContent = parseFloat(sRho.value).toFixed(2);
+  }
+}
+
+function onSimParamChange() {
+  const c = window.simCurrentCountry || 'PL';
+  const phi_pi = parseFloat(document.getElementById('sim-phi-pi').value);
+  const phi_x = parseFloat(document.getElementById('sim-phi-x').value);
+  const rho = parseFloat(document.getElementById('sim-rho').value);
+
+  document.getElementById('sim-phi-pi-val').textContent = phi_pi.toFixed(2);
+  document.getElementById('sim-phi-x-val').textContent = phi_x.toFixed(2);
+  document.getElementById('sim-rho-val').textContent = rho.toFixed(2);
+
+  window.simActiveParams[c] = { phi_pi, phi_x, rho };
+  recalculateCountryRow(c);
+}
+
+function applyPreset(presetType) {
+  const c = window.simCurrentCountry || 'PL';
+  let targetParams = null;
+
+  if (presetType === 'DEFAULT') {
+    targetParams = { ...DEFAULT_COUNTRY_PARAMS[c] };
+  } else if (DEFAULT_COUNTRY_PARAMS[presetType]) {
+    targetParams = { ...DEFAULT_COUNTRY_PARAMS[presetType] };
+  } else if (presetType === 'TAYLOR1993') {
+    targetParams = { phi_pi: 1.50, phi_x: 0.50, rho: 0.70 };
+  }
+
+  if (targetParams) {
+    window.simActiveParams[c] = targetParams;
+    syncSlidersToCountry(c);
+    recalculateCountryRow(c);
+  }
+}
+
+function recalculateCountryRow(c) {
+  const row = document.querySelector(`.rstar-country-row[data-country="${c}"]`);
+  if (!row) return;
+
+  const off = parseFloat(row.getAttribute('data-off'));
+  const prev = parseFloat(row.getAttribute('data-prev'));
+  const inf = parseFloat(row.getAttribute('data-inf'));
+  const target = parseFloat(row.getAttribute('data-target'));
+  const gap = parseFloat(row.getAttribute('data-gap'));
+
+  // Get current baseline r*
+  const rStarSlider = document.getElementById('rstar-slider');
+  const rStar = rStarSlider ? parseFloat(rStarSlider.value) : 1.0;
+
+  const params = window.simActiveParams[c] || DEFAULT_COUNTRY_PARAMS[c];
+  const phi_pi = params.phi_pi;
+  const phi_x = params.phi_x;
+  const rho = params.rho;
+
+  // Unsmoothed target: r* + target + phi_pi * (inf - target) + phi_x * gap
+  const iStar = rStar + target + phi_pi * (inf - target) + phi_x * gap;
+
+  // Smoothed rate: i_t = rho * i_{t-1} + (1 - rho) * i*
+  const iSmoothed = rho * prev + (1 - rho) * iStar;
+
+  // Projected rate +4Q: i_{t+4} = rho^4 * i_t + (1 - rho^4) * i*
+  const rho4 = Math.pow(rho, 4);
+  const iProj4Q = rho4 * off + (1 - rho4) * iStar;
+
+  // Policy Stance gap vs. +4Q forward projection: Official - iProj4Q
+  const policyGap = off - iProj4Q;
+
+  // Update DOM elements for this country row
+  const cellImplied = row.querySelector('.cell-implied');
+  if (cellImplied) cellImplied.textContent = iSmoothed.toFixed(2) + '%';
+
+  const cellProj4q = row.querySelector('.cell-proj4q');
+  if (cellProj4q) cellProj4q.textContent = iProj4Q.toFixed(2) + '%';
+
+  const cellStance = row.querySelector('.cell-stance');
+  if (cellStance) {
+    let badgeClass = 'badge-stance-aligned';
+    let stanceLabel = 'Aligned';
+    if (policyGap < -0.5) {
+      badgeClass = 'badge-stance-loose';
+      stanceLabel = 'Accommodative';
+    } else if (policyGap > 0.5) {
+      badgeClass = 'badge-stance-restrictive';
+      stanceLabel = 'Restrictive';
+    }
+    const sign = policyGap >= 0 ? '+' : '';
+    cellStance.innerHTML = `<span class="badge-stance ${badgeClass}">${stanceLabel} (${sign}${policyGap.toFixed(2)} pp)</span>`;
+  }
+}
+
+// 4. Synchronized Global Country Selector for Historical Rates Charts
+window.currentSelectedCountry = 'PL';
+
+const COUNTRY_NAMES = {
+  'PL': 'Poland (NBP)',
+  'CZ': 'Czechia (CNB)',
+  'HU': 'Hungary (MNB)',
+  'RO': 'Romania (BNR)'
+};
+
+function getHistoricalPlots() {
+  const container = document.getElementById('historical-rates') || document.body;
+  const elements = container.querySelectorAll('.html-widget.plotly');
+  return Array.from(elements);
+}
+
+function syncCountrySelect(code) {
+  window.currentSelectedCountry = code;
+
+  // 1. Update active pill button state
+  document.querySelectorAll('.btn-country-pill').forEach(btn => {
+    if (btn.getAttribute('data-country') === code) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  // 2. Update dynamic country badge text if present
+  const badgeEl = document.getElementById('current-country-display');
+  if (badgeEl && COUNTRY_NAMES[code]) {
+    badgeEl.textContent = COUNTRY_NAMES[code];
+  }
+
+  const plots = getHistoricalPlots();
+
+  plots.forEach(plotEl => {
+    try {
+      if (typeof Plotly === 'undefined') return;
+
+      if (plotEl.offsetWidth > 0) {
+        Plotly.Plots.resize(plotEl);
+      }
+
+      if (plotEl.data && plotEl.data.length > 0) {
+        const totalTraces = plotEl.data.length;
+        let activeIndices = [];
+        if (totalTraces >= 16) {
+          // Plot 1: 4 traces per country (Official, Real, Target, Implied)
+          if (code === 'PL') activeIndices = [0, 1, 2, 3];
+          else if (code === 'CZ') activeIndices = [4, 5, 6, 7];
+          else if (code === 'HU') activeIndices = [8, 9, 10, 11];
+          else if (code === 'RO') activeIndices = [12, 13, 14, 15];
+        } else {
+          // Plot 2: 3 traces per country (Policy Gap, Inflation Dev, Output Gap)
+          if (code === 'PL') activeIndices = [0, 1, 2];
+          else if (code === 'CZ') activeIndices = [3, 4, 5];
+          else if (code === 'HU') activeIndices = [6, 7, 8];
+          else if (code === 'RO') activeIndices = [9, 10, 11];
+        }
+
+        for (let i = 0; i < totalTraces; i++) {
+          plotEl.data[i].visible = activeIndices.includes(i);
+        }
+        Plotly.redraw(plotEl);
+      }
+    } catch (err) {
+      console.warn('Sync plot error for country ' + code + ':', err);
+    }
+  });
+}
+
+// 5. Tab Switching & Resize Watcher for Quarto / Bootstrap 5
+function triggerTabSync() {
+  setTimeout(function() {
+    window.dispatchEvent(new Event('resize'));
+    const plots = getHistoricalPlots();
+    plots.forEach(p => {
+      try { Plotly.Plots.resize(p); } catch (err) {}
+    });
+    syncCountrySelect(window.currentSelectedCountry || 'PL');
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise().catch(function(err) {});
+    }
+  }, 60);
+  setTimeout(function() {
+    const plots = getHistoricalPlots();
+    plots.forEach(p => {
+      try { Plotly.Plots.resize(p); } catch (err) {}
+    });
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise().catch(function(err) {});
+    }
+  }, 250);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Listen for Bootstrap 5 tab changes (shown.bs.tab)
+  const tabLinks = document.querySelectorAll('a[data-bs-toggle="tab"], button[data-bs-toggle="tab"]');
+  tabLinks.forEach(tab => {
+    tab.addEventListener('shown.bs.tab', function(e) {
+      const target = e.target.getAttribute('data-bs-target') || e.target.getAttribute('href');
+      if (target === '#historical-rates') {
+        triggerTabSync();
+      }
+    });
+    // Fallback click listener
+    tab.addEventListener('click', function() {
+      const target = this.getAttribute('data-bs-target') || this.getAttribute('href');
+      if (target === '#historical-rates') {
+        triggerTabSync();
+      }
+    });
+  });
+
+  // Initial synchronization check after DOM ready
+  setTimeout(function() {
+    syncCountrySelect(window.currentSelectedCountry || 'PL');
+  }, 200);
+  setTimeout(function() {
+    syncCountrySelect(window.currentSelectedCountry || 'PL');
+  }, 600);
+});
+</script>
