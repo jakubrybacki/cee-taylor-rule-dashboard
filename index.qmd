@@ -24,6 +24,11 @@ library(htmltools)
 # Load datasets relative to this directory
 panel_raw <- read_csv("../cee_taylor_panel.csv", show_col_types = FALSE)
 params_raw <- read_csv("../cee_taylor_parameters.csv", show_col_types = FALSE)
+latest_monthly_raw <- if (file.exists("../cee_taylor_latest_monthly.csv")) {
+  read_csv("../cee_taylor_latest_monthly.csv", show_col_types = FALSE)
+} else {
+  NULL
+}
 
 # Ensure professional English country names across all datasets
 country_en_map <- c("PL" = "Poland", "CZ" = "Czechia", "HU" = "Hungary", "RO" = "Romania")
@@ -124,32 +129,53 @@ ro_data <- panel_base %>% filter(country_code == "RO", date >= "2010-01-01")
 
 ## Row {height=auto}
 
-### Current Monetary Policy Rates & Interactive Taylor Rule Calculator (Latest: 2026-Q3)
+### Current Monetary Policy Rates & Interactive Taylor Rule Calculator (Monthly Flash Monitor)
 
 ```{r table-current-summary}
-# Compute latest quarter summary table for 4 CEE countries
-latest_summary <- panel_base %>%
-  group_by(country_code) %>%
-  filter(date == max(date)) %>%
-  ungroup() %>%
-  mutate(
-    # Taylor (1993) benchmark rule: 0.5 on inflation deviation and 0.5 on output gap
-    # i* = r* + pi* + 1.5 * (pi_YoY - pi*) + 0.5 * output_gap
-    taylor_1993_ann = round(r_star_base + inflation_target + 1.5 * (inflation_rate_yoy - inflation_target) + 0.5 * output_gap, 2),
-    rate_4q_proj = (smoothing_rho^4) * official_policy_rate_ann + (1 - smoothing_rho^4) * canonical_target_ann,
-    country_label = paste0(country_name, " (", central_bank, ")"),
-    official_fmt = sprintf("%.2f%%", official_policy_rate_ann),
-    taylor_1993_fmt = sprintf("%.2f%%", taylor_1993_ann),
-    implied_fmt = sprintf("%.2f%%", canonical_implied_ann),
-    proj_4q_fmt = sprintf("%.2f%%", rate_4q_proj),
-    gap_val = round(official_policy_rate_ann - rate_4q_proj, 2),
-    stance_badge = case_when(
-      gap_val > 0.5 ~ paste0("<span class='badge-stance badge-stance-restrictive'>Restrictive (", sprintf("%+.2f pp", gap_val), ")</span>"),
-      gap_val < -0.5 ~ paste0("<span class='badge-stance badge-stance-loose'>Accommodative (", sprintf("%+.2f pp", gap_val), ")</span>"),
-      TRUE ~ paste0("<span class='badge-stance badge-stance-aligned'>Aligned (", sprintf("%+.2f pp", gap_val), ")</span>")
-    )
-  ) %>%
-  arrange(country_name)
+# Compute latest summary table for 4 CEE countries using monthly flash data when available
+latest_summary <- if (!is.null(latest_monthly_raw) && nrow(latest_monthly_raw) > 0) {
+  latest_monthly_raw %>%
+    mutate(
+      country_name = ifelse(country_code %in% names(country_en_map), country_en_map[country_code], country_name),
+      taylor_1993_ann = round(r_star_base + inflation_target + 1.5 * (inflation_rate_yoy - inflation_target) + 0.5 * output_gap, 2),
+      canonical_target_ann = round(r_star_base + inflation_target + phi_pi * (inflation_rate_yoy - inflation_target) + phi_x * output_gap, 2),
+      canonical_implied_ann = round(smoothing_rho * prev_policy_rate_ann + (1 - smoothing_rho) * canonical_target_ann, 2),
+      rate_4q_proj = round((smoothing_rho^4) * official_policy_rate_ann + (1 - smoothing_rho^4) * canonical_target_ann, 2),
+      country_label = paste0(country_name, " (", central_bank, ")"),
+      official_fmt = sprintf("%.2f%%", official_policy_rate_ann),
+      taylor_1993_fmt = sprintf("%.2f%%", taylor_1993_ann),
+      implied_fmt = sprintf("%.2f%%", canonical_implied_ann),
+      proj_4q_fmt = sprintf("%.2f%%", rate_4q_proj),
+      gap_val = round(official_policy_rate_ann - rate_4q_proj, 2),
+      stance_badge = case_when(
+        gap_val > 0.5 ~ paste0("<span class='badge-stance badge-stance-restrictive'>Restrictive (", sprintf("%+.2f pp", gap_val), ")</span>"),
+        gap_val < -0.5 ~ paste0("<span class='badge-stance badge-stance-loose'>Accommodative (", sprintf("%+.2f pp", gap_val), ")</span>"),
+        TRUE ~ paste0("<span class='badge-stance badge-stance-aligned'>Aligned (", sprintf("%+.2f pp", gap_val), ")</span>")
+      )
+    ) %>%
+    arrange(country_name)
+} else {
+  panel_base %>%
+    group_by(country_code) %>%
+    filter(date == max(date)) %>%
+    ungroup() %>%
+    mutate(
+      taylor_1993_ann = round(r_star_base + inflation_target + 1.5 * (inflation_rate_yoy - inflation_target) + 0.5 * output_gap, 2),
+      rate_4q_proj = (smoothing_rho^4) * official_policy_rate_ann + (1 - smoothing_rho^4) * canonical_target_ann,
+      country_label = paste0(country_name, " (", central_bank, ")"),
+      official_fmt = sprintf("%.2f%%", official_policy_rate_ann),
+      taylor_1993_fmt = sprintf("%.2f%%", taylor_1993_ann),
+      implied_fmt = sprintf("%.2f%%", canonical_implied_ann),
+      proj_4q_fmt = sprintf("%.2f%%", rate_4q_proj),
+      gap_val = round(official_policy_rate_ann - rate_4q_proj, 2),
+      stance_badge = case_when(
+        gap_val > 0.5 ~ paste0("<span class='badge-stance badge-stance-restrictive'>Restrictive (", sprintf("%+.2f pp", gap_val), ")</span>"),
+        gap_val < -0.5 ~ paste0("<span class='badge-stance badge-stance-loose'>Accommodative (", sprintf("%+.2f pp", gap_val), ")</span>"),
+        TRUE ~ paste0("<span class='badge-stance badge-stance-aligned'>Aligned (", sprintf("%+.2f pp", gap_val), ")</span>")
+      )
+    ) %>%
+    arrange(country_name)
+}
 
 # Interactive control box with slider for r* and country policy simulation engine
 control_box_html <- div(
@@ -320,8 +346,8 @@ summary_table_html <- tags$div(
             style = "text-align: left; padding: 10px 14px;",
             tags$div(style = "font-weight: 700; font-size: 0.95rem; color: #111;", row$country_label),
             tags$div(style = "font-size: 0.78rem; color: #64748b;",
-                     paste0("YoY Inflation: ", sprintf("%.1f%%", row$inflation_rate_yoy),
-                            " (Target: ", sprintf("%.1f%%", row$inflation_target), "%) | Output Gap: ", sprintf("%+.2f%%", row$output_gap)))
+                     paste0("Monthly YoY Inflation: ", sprintf("%.1f%%", row$inflation_rate_yoy),
+                            " (Target: ", sprintf("%.1f%%", row$inflation_target), "%) | Output Gap (Quarterly): ", sprintf("%+.2f%%", row$output_gap)))
           ),
           tags$td(style = "text-align: center; font-weight: 700; padding: 10px 14px;", row$official_fmt),
           tags$td(class = "cell-target", style = "text-align: center; font-weight: 600; color: #d6498b; padding: 10px 14px;", row$taylor_1993_fmt),
@@ -340,6 +366,10 @@ tagList(
               "Current Central Bank Rates vs. Taylor Rule Targets and 4-Quarter Forward Projections"
       ),
       div(class = "taylor-subtitle-box w-100",
+          div(class = "math-rule-row",
+              tags$span(class = "math-rule-label", "Data Frequency:"),
+              tags$span(class = "math-rule-note", "Official Policy Rates and YoY Inflation are based on the latest available monthly releases (September 2026); Output Gap is sourced from quarterly GDP.")
+          ),
           div(class = "math-rule-row",
               tags$span(class = "math-rule-label", "Taylor (1993) Benchmark:"),
               tags$span(class = "math-formula", 
