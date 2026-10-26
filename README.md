@@ -30,9 +30,12 @@ Interaktywny front-end dashboardu badawczego dla reguły Taylora w państwach Eu
 
 ---
 
-## 3. Uruchamianie i Ponowna Kompilacja
+## 3. Uruchamianie, Ponowna Kompilacja i Publikacja na GitHub
 
-- Aby obejrzeć dashboard: otwórz plik [index.html](file:///g:/Mój%20dysk/Papers/Mateusz/Artykuły%20-%20zaakceptowane/Article%20-%20PTE%20-%20Bank%20i%20Kredyt/Dashboard/quarto_dashboard/index.html) w dowolnej przeglądarce internetowej.
-- Aby zaktualizować/przekompilować dashboard po zmianie danych:
+- Aby obejrzeć dashboard lokalnie: otwórz plik [index.html](file:///g:/Mój%20dysk/Papers/Mateusz/Artykuły%20-%20zaakceptowane/Article%20-%20PTE%20-%20Bank%20i%20Kredyt/Dashboard/quarto_dashboard/index.html) w dowolnej przeglądarce internetowej.
+- **Jednoklikowa aktualizacja danych i publikacja na GitHub:**
+  - Uruchom dwuklikiem plik **`update_and_publish_github.bat`**.
+  - Skrypt pobierze świeże dane z BIS/Eurostatu, przeliczy modele, zaktualizuje BigQuery, wyrenderuje Quarto i automatycznie wypchnie zmiany (`git commit & push`) na GitHuba.
+- Aby tylko przekompilować dashboard lokalnie:
   - Uruchom dwuklikiem plik `render_dashboard.bat`, LUB
   - Wpisz w terminalu w tym folderze: `quarto render index.qmd`.
